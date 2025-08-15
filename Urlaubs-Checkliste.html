@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Urlaubs-Checkliste</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Modernes Farbschema */
+        :root {
+            --primary-bg-color: #f7f9fc;
+            --secondary-bg-color: #ffffff;
+            --border-color: #e2e8f0;
+            --text-color: #334e68;
+            --heading-color: #2a4158;
+            --button-primary: #4a90e2;
+            --button-danger: #d9534f;
+            --button-success: #28a745;
+            --button-dark: #6c757d;
+        }
+
+        /* Allgemeine Stile */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background: var(--primary-bg-color);
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--heading-color);
+            font-weight: 600;
+        }
+        
+        h2 {
+            margin-top: 0;
+            color: var(--heading-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #date {
+            text-align: right;
+            font-size: 14px;
+            color: #6e84a3;
+            margin-bottom: 20px;
+        }
+
+        #container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .category, .special-tasks, .trip-details {
+            background: var(--secondary-bg-color);
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+        .category:hover, .special-tasks:hover, .trip-details:hover {
+            transform: translateY(-5px);
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            cursor: grab;
+        }
+
+        li.dragging {
+            opacity: 0.5;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.3);
+            flex-shrink: 0;
+            accent-color: var(--button-primary);
+        }
+        
+        .task-text {
+            flex-grow: 1;
+            font-size: 1.1em;
+        }
+
+        .task-buttons {
+            margin-left: auto;
+            flex-shrink: 0;
+            display: none;
+            gap: 8px;
+        }
+
+        .task-buttons.visible {
+            display: flex;
+        }
+        
+        .edit-btn, .delete-btn {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1.2em;
+            padding: 8px;
+            color: #829ab1;
+            transition: color 0.2s;
+        }
+
+        .edit-btn:hover {
+            color: var(--button-primary);
+        }
+        .delete-btn:hover {
+            color: var(--button-danger);
+        }
+
+        .abfuhr {
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+        
+        .add-task-container {
+            display: flex;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .add-task-container input {
+            flex-grow: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .add-task-container input:focus {
+            border-color: var(--button-primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        .add-task-container button, #resetBtn, #updateBtn, #printBtn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .add-task-btn, #add-special-task-btn {
+            background-color: var(--button-primary);
+            color: white;
+        }
+        .add-task-btn:hover, #add-special-task-btn:hover {
+            background-color: #3b76c0;
+            transform: translateY(-2px);
+        }
+
+        #resetBtn {
+            margin: 30px auto;
+            display: block;
+            background-color: var(--button-danger);
+            color: white;
+        }
+        #resetBtn:hover {
+            background-color: #c9302c;
+            transform: translateY(-2px);
+        }
+
+        #printBtn {
+            background-color: var(--button-dark);
+            color: white;
+        }
+        #printBtn:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .trip-details {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .trip-details div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trip-details label {
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .trip-details input[type="number"], .trip-details input[type="date"], .trip-details select {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 1em;
+        }
+
+        #updateBtn {
+            background-color: var(--button-success);
+            color: white;
+            width: 100%;
+        }
+
+        #updateBtn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        /* Suche */
+        #search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #search-input {
+            flex-grow: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 1em;
+            outline: none;
+        }
+        #search-input:focus {
+            border-color: var(--button-primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        /* Urlaubs-Warnung */
+        #vacation-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none; /* Standardmäßig versteckt */
+        }
+        #vacation-warning.visible {
+            display: block;
+        }
+
+        /* Print-Stile */
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+                padding: 0;
+            }
+            #container {
+                box-shadow: none;
+            }
+            .trip-details, .add-task-container, #resetBtn, #printBtn, #updateBtn, #search-container, #vacation-warning {
+                display: none;
+            }
+            .category, .special-tasks {
+                box-shadow: none;
+                border: 1px solid #ccc;
+                margin-bottom: 15px;
+                padding: 15px;
+            }
+            ul {
+                margin: 0;
+            }
+            li {
+                margin-bottom: 5px;
+                cursor: default;
+                display: block;
+            }
+            li .task-buttons {
+                display: none;
+            }
+            input[type="checkbox"] {
+                margin-right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📋 Urlaubs-Checkliste</h1>
+    <div id="date"></div>
+
+    <div id="container">
+        <div class="trip-details">
+            <h2>Details zur Reise</h2>
+            <div>
+                <label for="trip-duration">Aufenthaltsdauer (Tage):</label>
+                <input type="number" id="trip-duration" value="7" min="1">
+            </div>
+            <div>
+                <label for="weather-select">Erwartetes Wetter:</label>
+                <select id="weather-select">
+                    <option value="sonne">Sonne</option>
+                    <option value="regen">Regen/Durchschnittliche Temp.</option>
+                    <option value="schnee">Schnee/Kalt</option>
+                </select>
+            </div>
+            <div>
+                <label for="washing-machine">Waschmaschine vor Ort:</label>
+                <input type="checkbox" id="washing-machine">
+            </div>
+            <div>
+                <label for="trip-start-date">Urlaubsbeginn:</label>
+                <input type="date" id="trip-start-date">
+            </div>
+            <div>
+                <label for="trip-end-date">Urlaubsende:</label>
+                <input type="date" id="trip-end-date">
+            </div>
+            <button id="updateBtn">Checkliste aktualisieren</button>
+        </div>
+
+        <div id="vacation-warning"></div>
+
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Checkliste durchsuchen...">
+        </div>
+
+        <div class="category" id="general-essentials">
+            <h2>🎒 Allgemeine Essentials</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="category" id="kleidung-tim">
+            <h2>👕 Kleidung TME</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="category" id="kleidung-sina">
+            <h2>👗 Kleidung SINA</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="category" id="fuer-das-baby">
+            <h2>👶 Für das Baby</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="category" id="fuer-den-hund">
+            <h2>🐾 Für den Hund</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="category" id="fuer-die-ferienwohnung">
+            <h2>🏠 Für die Ferienwohnung</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="category" id="fuer-aktivitaeten-und-unterhaltung">
+            <h2>🎲 Für Aktivitäten & Unterhaltung</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="category" id="ggf-fuer-camping">
+            <h2>🏕️ Ggf. für Camping</h2>
+            <ul class="task-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Aufgabe hinzufügen...">
+                <button class="add-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+        <div class="special-tasks" id="sonderaufgaben-div">
+            <h2>🚀 Sonderaufgaben (vorher erledigen)</h2>
+            <ul class="special-tasks-list"></ul>
+            <div class="add-task-container">
+                <input type="text" placeholder="Neue Sonderaufgabe hinzufügen..." id="new-special-task-input">
+                <button id="add-special-task-btn">Hinzufügen</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="printBtn">🖨️ Drucken</button>
+    <button id="resetBtn">🔁 Neu starten</button>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const dateToday = new Date();
+            document.getElementById("date").textContent = dateToday.toLocaleDateString("de-DE", {
+                weekday: "long", year: "numeric", month: "long", day: "numeric"
+            });
+
+            // Lade gespeicherte Reisedaten oder nutze Standardwerte
+            const savedDuration = localStorage.getItem('tripDuration');
+            const savedWeather = localStorage.getItem('weatherSelect');
+            const savedWashingMachine = localStorage.getItem('washingMachine');
+            const savedTripStartDate = localStorage.getItem('tripStartDate');
+            const savedTripEndDate = localStorage.getItem('tripEndDate');
+
+
+            if (savedDuration) {
+                document.getElementById("trip-duration").value = savedDuration;
+            }
+            if (savedWeather) {
+                document.getElementById("weather-select").value = savedWeather;
+            }
+            if (savedWashingMachine === 'true') {
+                document.getElementById("washing-machine").checked = true;
+            }
+            if (savedTripStartDate) {
+                document.getElementById("trip-start-date").value = savedTripStartDate;
+            }
+            if (savedTripEndDate) {
+                document.getElementById("trip-end-date").value = savedTripEndDate;
+            }
+
+
+            // Initialdaten, die nicht dynamisch generiert werden
+            const initialTasksData = {
+                "general-essentials": [
+                    { text: "Ausweise, Reisepässe", checked: false },
+                    { text: "Geldbörsen mit Behindertenausweise, Krankenversicherungskarten, Führerschein", checked: false },
+                    { text: "Bargeld", checked: false },
+                    { text: "Parkgroschen", checked: false },
+                    { text: "Reisedokumente (Buchungsbestätigung für die Ferienwohnung, Reservierungen etc.)", checked: false },
+                    { text: "Handys", checked: false },
+                    { text: "2 lange Ladekabel", checked: false },
+                    { text: "Doppelnetzstecker", checked: false },
+                    { text: "Hustenbonbons Sina", checked: false },
+                    { text: "Medikamente Tim", checked: false },
+                    { text: "Medikamente Juen", checked: false },
+                    { text: "Fieberzäpfchen", checked: false },
+                    { text: "VitaminD", checked: false },
+                    { text: "Fieberthermometer", checked: false },
+                    { text: "Nasentropfen", checked: false },
+                    { text: "Hustensaft", checked: false },
+                    { text: "Cortisoncreme", checked: false },
+                    { text: "Pilzspray", checked: false },
+                    { text: "Mirfulancreme", checked: false },
+                    { text: "Erkältungsbalsam", checked: false },
+                    { text: "Ekzem-Creme", checked: false },
+                    { text: "Krupp Zäpfchen", checked: false },
+                    { text: "Medikamente Sina", checked: false },
+                    { text: "Erste-Hilfe-Set", checked: false },
+                    { text: "Schmerzen, Fieber, Magen-Darm, Übelkeit", checked: false },
+                    { text: "Fieberthermometer", checked: false },
+                    { text: "Desinfektionsmittel", checked: false },
+                    { text: "Insektenspray", checked: false },
+                    { text: "Sonnenbrillen", checked: false },
+                    { text: "Sonnencreme für Erwachsene", checked: false },
+                    { text: "Sonnencreme für Babys", checked: false },
+                    { text: "Notfallkontakte", checked: false },
+                    { text: "Autopapiere und Parkscheine", checked: false },
+                    { text: "Ohrstöpsel", checked: false },
+                    { text: "EU-Reisepass Timmy", checked: false },
+                    { text: "Tickets", checked: false },
+                    { text: "Essen für die Fahrt (mit Nudelsalat, Käsekuchen)", checked: false },
+                    { text: "Trinken für die Fahrt", checked: false },
+                    { text: "Hartschaumkissen", checked: false },
+                    { text: "2 FFP2 Masken", checked: false },
+                    { text: "Zeckenzange", checked: false },
+                    { text: "Schlemmerblock", checked: false },
+                    { text: "Regencapes", checked: false },
+                    { text: "Regenschirme", checked: false },
+                    { text: "Beutel für Dreckswäsche", checked: false }
+                ],
+                "fuer-das-baby": [
+                    { text: "Thermoskanne für Juen Wasser unterwegs (warm!)", checked: false },
+                    { text: "Wasserkleidung UV", checked: false },
+                    { text: "Zahnbürste, Zahnpasta", checked: false },
+                    { text: "1 Flasche für Juen für Wasser unterwegs (kalt!)", checked: false },
+                    { text: "1 Thermoskanne für Wasser vor Ort abkochen", checked: false },
+                    { text: "Löffel für Brei", checked: false },
+                    { text: "Löffel für Pre Milch", checked: false },
+                    { text: "Ständer für Fläschchen", checked: false },
+                    { text: "40 Windeln für 10 Tage", checked: false },
+                    { text: "11 Pampers Windeln für nachts", checked: false },
+                    { text: "1 Paket Feuchttücher", checked: false },
+                    { text: "Snuza", checked: false },
+                    { text: "Otti", checked: false },
+                    { text: "Kleidung", checked: false },
+                    { text: "2 Mützen", checked: false },
+                    { text: "1 Sonnencap", checked: false },
+                    { text: "3 Pullis", checked: false },
+                    { text: "3 Strumpfhosen", checked: false },
+                    { text: "3 kurze Hosen", checked: false },
+                    { text: "3 lange Hosen", checked: false },
+                    { text: "3 Halstücher", checked: false },
+                    { text: "3 kurze Bodys", checked: false },
+                    { text: "7 lange Bodys", checked: false },
+                    { text: "4 Paar Socken", checked: false },
+                    { text: "1 Ganzkörperanzug Kinderwagen", checked: false },
+                    { text: "Schneeanzug", checked: false },
+                    { text: "2 Strampler", checked: false },
+                    { text: "2 Jacken", checked: false },
+                    { text: "1 Paar Handschuhe", checked: false },
+                    { text: "2 Paar Schuhe", checked: false },
+                    { text: "Babyöl nach dem Baden", checked: false },
+                    { text: "Babybrei", checked: false },
+                    { text: "Babyflaschen", checked: false },
+                    { text: "Milchpulver", checked: false },
+                    { text: "Packungen Pre Milch", checked: false },
+                    { text: "Portionierer", checked: false },
+                    { text: "Dose für Milch-Pulver", checked: false },
+                    { text: "Babydecke", checked: false },
+                    { text: "2 Schlafsäcke", checked: false },
+                    { text: "(Leucht-) Schnuller und Schnullerkette", checked: false },
+                    { text: "2 Molton-Wickelunterlagen für drinnen", checked: false },
+                    { text: "4 kleine Molton-Unterlagen", checked: false },
+                    { text: "Wickelunterlagen für unterwegs", checked: false },
+                    { text: "6 Spucktücher", checked: false },
+                    { text: "Wickeltasche", checked: false },
+                    { text: "2 Lätzchen", checked: false },
+                    { text: "Babybadewanne", checked: false },
+                    { text: "Badethermometer", checked: false },
+                    { text: "Spielzeug", checked: false },
+                    { text: "Bücher für das Baby", checked: false },
+                    { text: "Schnuffel", checked: false },
+                    { text: "Töpfchen", checked: false },
+                    { text: "Extra Handtuch", checked: false },
+                    { text: "Badesachen", checked: false },
+                    { text: "2 Badehosen", checked: false },
+                    { text: "2 Handtücher", checked: false },
+                    { text: "Kinderwagen mit", checked: false },
+                    { text: "Adapter", checked: false },
+                    { text: "Regenhaube", checked: false },
+                    { text: "Regencape für Erwachsene", checked: false },
+                    { text: "Sonnensegel", checked: false },
+                    { text: "Insektenschutz", checked: false },
+                    { text: "Tasche für Kinderwagen", checked: false },
+                    { text: "Fußsack", checked: false },
+                    { text: "Schloss für Kinderwagen", checked: false },
+                    { text: "Babywippe", checked: false },
+                    { text: "Hochstuhl", checked: false },
+                    { text: "1 Spieledecke", checked: false },
+                    { text: "Stillkissen", checked: false },
+                    { text: "Nasensauger", checked: false },
+                    { text: "Reisebett", checked: false },
+                    { text: "Matratze für Reisebett", checked: false },
+                    { text: "Bettwäsche Baby", checked: false },
+                    { text: "Baby-Hochstuhl", checked: false },
+                    { text: "Thermometer für Wohnung", checked: false },
+                    { text: "Sterilisator", checked: false },
+                    { text: "Trage", checked: false },
+                    { text: "Tragejacke", checked: false },
+                    { text: "Sonnencreme", checked: false },
+                    { text: "Waschlappen", checked: false },
+                    { text: "Bollerwagen", checked: false }
+                ],
+                "fuer-den-hund": [
+                    { text: "Hundeleine", checked: false },
+                    { text: "Geschirr und Halsband mit Hundemarke", checked: false },
+                    { text: "Futter- und Wassernapf", checked: false },
+                    { text: "Genügend Futter für die Dauer des Aufenthalts", checked: false },
+                    { text: "Leckerlis und Spielzeug für den Hund", checked: false },
+                    { text: "Hundedecke oder Körbchen", checked: false },
+                    { text: "Kotbeutel und Reinigungsmittel für eventuelle Unfälle", checked: false },
+                    { text: "Hundemedikamente (falls benötigt)", checked: false },
+                    { text: "Informationen zu Tierärzten in der Nähe des Urlaubsortes", checked: false },
+                    { text: "Erdanker mit Laufleine", checked: false }
+                ],
+                "fuer-die-ferienwohnung": [
+                    { text: "Bettwäsche und", checked: false },
+                    { text: "Handtücher (prüfe vorher, ob diese gestellt werden)", checked: false },
+                    { text: "Matratzen Bus", checked: false },
+                    { text: "Geschirr, Besteck und Kochutensilien", checked: false },
+                    { text: "Lebensmittel (Grundnahrungsmittel und Lieblingssnacks)", checked: false },
+                    { text: "Küchenrolle", checked: false },
+                    { text: "Spülmittel", checked: false },
+                    { text: "Müllbeutel", checked: false },
+                    { text: "Toiletttenpapier", checked: false },
+                    { text: "Feuchtes Toilettenpapier", checked: false },
+                    { text: "Seife", checked: false },
+                    { text: "Picknickdecke", checked: false },
+                    { text: "Decken oder Kissen für gemütliche Abende auf dem Sofa", checked: false },
+                    { text: "Kulturbeutel", checked: false },
+                    { text: "Zahnbürste", checked: false },
+                    { text: "Ladekabel", checked: false },
+                    { text: "Zahnpasta", checked: false },
+                    { text: "Cremes, Nivea", checked: false },
+                    { text: "Rasierer", checked: false },
+                    { text: "Tampons / Einlagen", checked: false },
+                    { text: "Deo", checked: false },
+                    { text: "Zahnseide", checked: false },
+                    { text: "Nagelknipser CC", checked: false },
+                    { text: "Handcreme", checked: false },
+                    { text: "Verhütung", checked: false },
+                    { text: "Sachen für Kinderwunsch (Ovulationstest, Schwangerschaftstest etc)", checked: false },
+                    { text: "Waschmittel für Spüler", checked: false },
+                    { text: "Waschmittel für Waschmaschine", checked: false },
+                    { text: "Rei in der Tube", checked: false },
+                    { text: "Shampoo und Duschgel", checked: false },
+                    { text: "Taschenlampe", checked: false },
+                    { text: "Fön", checked: false },
+                    { text: "Kleine Wäschespinne", checked: false },
+                    { text: "Schäler", checked: false },
+                    { text: "Messer", checked: false },
+                    { text: "Wasserkocher", checked: false },
+                    { text: "Trinkflasche Tim und Sina", checked: false },
+                    { text: "Trinkflasche Timmy", checked: false },
+                    { text: "Thermomix mit ganzem Zubehör", checked: false },
+                    { text: "French Press mit Löffel", checked: false },
+                    { text: "Reste aus dem Kühlschrank", checked: false },
+                    { text: "1-2 Geschirrhandtücher (auch im Hotel) für Löffelchen, Lätzchen etc. trocknen", checked: false },
+                    { text: "1 Besteck Set für Juen", checked: false },
+                    { text: "1 Besteck Set für Erwachsene (für essen to Go)", checked: false },
+                    { text: "H-Milch", checked: false },
+                    { text: "Wasser", checked: false },
+                    { text: "Wasser im Tank", checked: false },
+                    { text: "Babygläschen mittags und abends", checked: false },
+                    { text: "Lätzchen", checked: false },
+                    { text: "Snacks für Juen", checked: false },
+                    { text: "Snacks für Erwachsene", checked: false },
+                    { text: "Mundabputztücher", checked: false },
+                    { text: "Breipulver Grießbrei", checked: false },
+                    { text: "Rapsöl für Juen", checked: false },
+                    { text: "Essen für die Fahrt oder Bäckerei anfahren", checked: false },
+                    { text: "2x Ravioli", checked: false },
+                    { text: "Kaffeepulver", checked: false },
+                    { text: "Tee", checked: false },
+                    { text: "Gewürze", checked: false }
+                ],
+                "fuer-aktivitaeten-und-unterhaltung": [
+                    { text: "Wander- oder Radkarten", checked: false },
+                    { text: "Reiseführer über Sehenswürdigkeiten und Attraktionen", checked: false },
+                    { text: "Strandspielzeug für das Baby", checked: false },
+                    { text: "Bücher, Zeitschriften", checked: false },
+                    { text: "Smartphone mit Kabel", checked: false },
+                    { text: "Picknickdecke und -korb für Ausflüge", checked: false },
+                    { text: "Spiele oder Spielzeug für regnerische Tage, Skipbo", checked: false },
+                    { text: "Taschentücher", checked: false },
+                    { text: "Strandmuschel", checked: false },
+                    { text: "Bollerwagen zusammen klappen", checked: false },
+                    { text: "Kopfhörer", checked: false },
+                    { text: "Rucksack", checked: false },
+                    { text: "Regenhaube Rucksack", checked: false },
+                    { text: "Beutel in den Rucksack für Mützen /Einkäufe etc.", checked: false },
+                    { text: "Reiseführer", checked: false },
+                    { text: "Powerbank", checked: false },
+                    { text: "Musikbox mit Ladekabel", checked: false },
+                    { text: "Nackenhörnchen", checked: false },
+                    { text: "Tablet mit Ladekabel", checked: false },
+                    { text: "Insektenstich- Brutzler", checked: false },
+                    { text: "Netzstecker USB", checked: false },
+                    { text: "Uhr mit Ladekabel", checked: false },
+                    { text: "Badesachen für die Eltern", checked: false },
+                    { text: "Badebekleidung", checked: false },
+                    { text: "Badelatschen", checked: false },
+                    { text: "Schwimmbrille", checked: false },
+                    { text: "Handtücher", checked: false },
+                    { text: "Saunatucher", checked: false },
+                    { text: "Strandhandtücher", checked: false }
+                ],
+                "ggf-fuer-camping": [
+                    { text: "Fzg Papiere, grüne Versicherungskarte", checked: false },
+                    { text: "1 Fahrrad mit Decke für Fahrt oder Fahrradträger und Fahrradkorb mit Kabelbindern", checked: false },
+                    { text: "Picknickdecke, die unten nass werden darf", checked: false },
+                    { text: "Kochplatte Induktion, dann auch geeignete Töpfe (die im Camper gehen nicht!)", checked: false },
+                    { text: "Wasserkocher", checked: false },
+                    { text: "Fön", checked: false },
+                    { text: "Kaffee?", checked: false },
+                    { text: "Heizlüfter, Heizung", checked: false },
+                    { text: "Verlängerungskabel", checked: false },
+                    { text: "2 Schlafsäcke für Erwachsene", checked: false },
+                    { text: "Stillkissen", checked: false },
+                    { text: "Box für Schuhe", checked: false },
+                    { text: "Toaster", checked: false }
+                ],
+                "sonderaufgaben-div": [
+                    { text: "Filme runterladen", checked: false },
+                    { text: "2 Thermoskannen voll mit kochendem Wasser füllen", checked: false },
+                    { text: "Cybex ohne Station anschnallen üben", checked: false },
+                    { text: "Musik und Podcasts runterladen", checked: false },
+                    { text: "Rezepte runterladen Thermomix", checked: false },
+                    { text: "Essen für die Fahrt", checked: false },
+                    { text: "Klargrubekabel Speicher", checked: false },
+                    { text: "Müll , Gelbersack leeren", checked: false },
+                    { text: "Windelmüll leeren", checked: false },
+                    { text: "Rasieren", checked: false },
+                    { text: "Lebensmittel abgleichen und Rezepte vergleichen", checked: false },
+                    { text: "Heizung runter", checked: false },
+                    { text: "Staubsauger sichermachen", checked: false },
+                    { text: "Stecker raus", checked: false },
+                    { text: "gießen", checked: false },
+                    { text: "Blumen drinnen", checked: false },
+                    { text: "Hochbeet", checked: false },
+                    { text: "Beet", checked: false },
+                    { text: "Tomaten", checked: false },
+                    { text: "Erdbeere im Hängetopf", checked: false },
+                    { text: "Blumenstrauß rüber", checked: false },
+                    { text: "Lebensmittel rüber zu Sinas Eltern?", checked: false },
+                    { text: "Staubsaugerroboter leeren", checked: false },
+                    { text: "Kaffee für die Fahrt", checked: false },
+                    { text: "Nasensauger putzen", checked: false },
+                    { text: "Wäsche abhängen", checked: false },
+                    { text: "Spül-/ Waschmaschine leeren / anschalten", checked: false },
+                    { text: "Tomate Haube zumachen", checked: false },
+                    { text: "Sperrmüll an die Straße", checked: false },
+                    { text: "Sina Rasieren", checked: false },
+                    { text: "Bus Batterie laden", checked: false },
+                    { text: "Kaffeemaschine einpacken", checked: false }
+                ]
+            };
+            
+            // Konfiguration für dynamische Kleidung
+            const clothingConfig = {
+                tim: {
+                    base: [
+                        { text: "T-Shirt", wearFrequency: 1 },
+                        { text: "Unterhosen", wearFrequency: 1 },
+                        { text: "Socken", wearFrequency: 1 },
+                        { text: "Hosen", wearFrequency: 3 },
+                        { text: "Pullover", wearFrequency: 2 },
+                        { text: "Jacken", wearFrequency: 4 },
+                        { text: "Bequeme Schuhe für Spaziergänge und Wandertouren", wearFrequency: Infinity },
+                        { text: "Badekleidung mit", wearFrequency: 7 },
+                        { text: "Badelatschen", wearFrequency: Infinity },
+                        { text: "Sonnenhüte oder Kappen", wearFrequency: Infinity },
+                        { text: "Schlafkleidung", wearFrequency: 3 },
+                        { text: "Schuhanzieher", wearFrequency: Infinity },
+                        { text: "Hausschuhe /- Socken", wearFrequency: Infinity },
+                        { text: "Gürtel", wearFrequency: Infinity },
+                        { text: "Orthesen", wearFrequency: Infinity },
+                        { text: "Haarmittel", wearFrequency: Infinity },
+                        { text: "Schuhe", wearFrequency: Infinity },
+                        { text: "Clogs", wearFrequency: Infinity }
+                    ],
+                    weather: {
+                        regen: [
+                            { text: "Regenjacke", quantity: 1 },
+                            { text: "Regenschirme", quantity: 1 }
+                        ],
+                        schnee: [
+                            { text: "Mütze, Schal", quantity: 1 },
+                            { text: "Handschuhe", quantity: 1 },
+                            { text: "Thermounterwäsche", quantity: 2 }
+                        ]
+                    }
+                },
+                sina: {
+                    base: [
+                        { text: "T-Shirt", wearFrequency: 1 },
+                        { text: "Unterhosen", wearFrequency: 1 },
+                        { text: "Socken", wearFrequency: 1 },
+                        { text: "BH", wearFrequency: 2 },
+                        { text: "Hosen", wearFrequency: 3 },
+                        { text: "Pullover", wearFrequency: 2 },
+                        { text: "Bequeme Schuhe für Spaziergänge und Wandertouren", wearFrequency: Infinity },
+                        { text: "Badekleidung", wearFrequency: 7 },
+                        { text: "mit Badelatschen", wearFrequency: Infinity },
+                        { text: "Outdoorhose mit Gürtel", wearFrequency: Infinity },
+                        { text: "Sonnenhüte oder Kappen", wearFrequency: Infinity },
+                        { text: "Schlafkleidung", wearFrequency: 3 },
+                        { text: "Hausschuhe /- Socken", wearFrequency: Infinity },
+                        { text: "Gürtel", wearFrequency: Infinity },
+                        { text: "Schuhe", wearFrequency: Infinity },
+                        { text: "Wassersandalen", wearFrequency: Infinity },
+                        { text: "1 Kleid", wearFrequency: 3 },
+                        { text: "Tampons", checked: false },
+                        { text: "Clogs", wearFrequency: Infinity }
+                    ],
+                    weather: {
+                        regen: [
+                            { text: "Jacke", quantity: 1 },
+                            { text: "Regenjacken, Regencapes und Regenschirme", quantity: 1 }
+                        ],
+                        schnee: [
+                            { text: "Mütze, Schal, Handschuhe", quantity: 1 },
+                            { text: "Thermounterwäsche", quantity: 2 }
+                        ]
+                    }
+                }
+            };
+
+            function generateClothingTasks(person, duration, weather, hasWashingMachine) {
+                let list = [];
+                const baseList = clothingConfig[person].base;
+                const weatherList = clothingConfig[person].weather[weather] || [];
+
+                baseList.forEach(item => {
+                    if (item.wearFrequency !== Infinity) {
+                        let quantity = Math.ceil(duration / item.wearFrequency);
+                        if (hasWashingMachine && item.wearFrequency <= 2) { // Logic für Waschmaschine
+                            quantity = Math.max(2, Math.ceil(duration / item.wearFrequency / 2));
+                        }
+                        if (hasWashingMachine && item.wearFrequency > 2) {
+                             quantity = Math.max(1, Math.ceil(duration / item.wearFrequency / 1.5));
+                        }
+                        list.push({ text: `${quantity}x ${item.text}`, checked: false });
+                    } else {
+                        list.push({ text: item.text, checked: false });
+                    }
+                });
+
+                weatherList.forEach(item => {
+                    list.push({ text: `${item.quantity}x ${item.text}`, checked: false });
+                });
+                
+                return list;
+            }
+
+            let tasksData;
+            
+            try {
+                const storedData = localStorage.getItem('urlaubChecklistData');
+                tasksData = storedData ? JSON.parse(storedData) : initialTasksData;
+            } catch (e) {
+                console.error("Fehler beim Laden des Local Storage, setze Daten zurück.", e);
+                localStorage.removeItem('urlaubChecklistData');
+                tasksData = initialTasksData;
+            }
+
+            function saveData() {
+                localStorage.setItem('urlaubChecklistData', JSON.stringify(tasksData));
+            }
+
+            function renderTasks() {
+                document.querySelectorAll('.task-list, .special-tasks-list').forEach(ul => ul.innerHTML = '');
+
+                const duration = parseInt(document.getElementById("trip-duration").value) || 0;
+                const weather = document.getElementById("weather-select").value;
+                const hasWashingMachine = document.getElementById("washing-machine").checked;
+                const tripStartDate = document.getElementById("trip-start-date").value;
+                const tripEndDate = document.getElementById("trip-end-date").value;
+
+                // Speichere die aktuellen Reisedaten
+                localStorage.setItem('tripDuration', duration);
+                localStorage.setItem('weatherSelect', weather);
+                localStorage.setItem('washingMachine', hasWashingMachine);
+                localStorage.setItem('tripStartDate', tripStartDate);
+                localStorage.setItem('tripEndDate', tripEndDate);
+
+
+                // Trenne dynamische von benutzerdefinierten Einträgen
+                const getCustomTasks = (category) => {
+                    if (!tasksData[category]) { // Ensure the category exists in tasksData
+                        return [];
+                    }
+                    // Filter out tasks that look like generated quantities (e.g., "2x Pullover")
+                    // This assumes custom tasks won't start with "Nx "
+                    return tasksData[category].filter(task => !/^\d+x /.test(task.text));
+                };
+
+                const customTasksTim = getCustomTasks('kleidung-tim');
+                const customTasksSina = getCustomTasks('kleidung-sina');
+
+                // Dynamische Kleidungsgruppen neu generieren
+                tasksData['kleidung-tim'] = generateClothingTasks('tim', duration, weather, hasWashingMachine);
+                tasksData['kleidung-sina'] = generateClothingTasks('sina', duration, weather, hasWashingMachine);
+                
+                // Hänge benutzerdefinierte Einträge wieder an
+                tasksData['kleidung-tim'] = tasksData['kleidung-tim'].concat(customTasksTim);
+                tasksData['kleidung-sina'] = tasksData['kleidung-sina'].concat(customTasksSina);
+
+                document.querySelector('#kleidung-tim h2').textContent = `👕 Kleidung TME für ${duration} Tage`;
+                document.querySelector('#kleidung-sina h2').textContent = `👗 Kleidung SINA für ${duration} Tage`;
+
+                for (const category in tasksData) {
+                    const ul = document.querySelector(`#${category} .task-list, #${category} .special-tasks-list`);
+                    if (ul) {
+                        tasksData[category].forEach((task, index) => {
+                            const li = document.createElement("li");
+                            li.dataset.index = index;
+                            li.dataset.category = category;
+                            li.setAttribute('draggable', 'true');
+                            
+                            const taskTextClass = 'task-text';
+                            
+                            li.innerHTML = `
+                                <input type="checkbox" id="checkbox-${category}-${index}" ${task.checked ? 'checked' : ''}>
+                                <span class="${taskTextClass}">${task.text}</span>
+                                <div class="task-buttons visible">
+                                    <button class="edit-btn" title="Bearbeiten">📝</button>
+                                    <button class="delete-btn" title="Löschen">❌</button>
+                                </div>
+                            `;
+                            ul.appendChild(li);
+                        });
+                    }
+                }
+                saveData();
+                addEventListeners();
+                checkVacationWarning(); // Check and display warning after rendering
+            }
+            
+            function addEventListeners() {
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const li = e.target.closest('li');
+                        const category = li.dataset.category;
+                        const index = parseInt(li.dataset.index);
+                        tasksData[category][index].checked = e.target.checked;
+                        saveData();
+                        checkVacationWarning(); // Update warning if a task is checked/unchecked
+                    });
+                });
+
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const li = e.target.closest('li');
+                        const category = li.dataset.category;
+                        const index = parseInt(li.dataset.index);
+                        tasksData[category].splice(index, 1);
+                        saveData();
+                        renderTasks();
+                    });
+                });
+
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const li = e.target.closest('li');
+                        const category = li.dataset.category;
+                        const taskTextSpan = li.querySelector('.task-text');
+                        const currentText = taskTextSpan.textContent;
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.value = currentText;
+                        input.classList.add('task-text');
+                        taskTextSpan.replaceWith(input);
+                        input.focus();
+
+                        const saveEdit = () => {
+                            const newText = input.value;
+                            const span = document.createElement('span');
+                            span.classList.add('task-text');
+                            span.textContent = newText;
+                            input.replaceWith(span);
+                            const index = parseInt(li.dataset.index);
+                            tasksData[category][index].text = newText;
+                            saveData();
+                            checkVacationWarning(); // Update warning if a task is edited
+                        };
+                        input.addEventListener('blur', saveEdit);
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                saveEdit();
+                            }
+                        });
+                    });
+                });
+
+                document.querySelectorAll('.add-task-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const categoryElement = e.target.closest('.category');
+                        if (categoryElement) {
+                            const category = categoryElement.id;
+                            const input = categoryElement.querySelector('.add-task-container input');
+                            const newTaskText = input.value.trim();
+                            if (newTaskText) {
+                                tasksData[category].push({ text: newTaskText, checked: false });
+                                input.value = '';
+                                saveData();
+                                renderTasks();
+                            }
+                        }
+                    });
+                });
+                
+                document.getElementById('add-special-task-btn').addEventListener('click', () => {
+                    const input = document.getElementById('new-special-task-input');
+                    const newTaskText = input.value.trim();
+                    if (newTaskText) {
+                        tasksData['sonderaufgaben-div'].push({ text: newTaskText, checked: false });
+                        input.value = '';
+                        saveData();
+                        renderTasks();
+                    }
+                });
+
+                // Drag and Drop-Funktionalität
+                let dragItem = null;
+                document.querySelectorAll('.task-list, .special-tasks-list').forEach(ul => {
+                    ul.addEventListener('dragstart', (e) => {
+                        dragItem = e.target;
+                        setTimeout(() => dragItem.classList.add('dragging'), 0);
+                    });
+                    ul.addEventListener('dragend', () => {
+                        dragItem.classList.remove('dragging');
+                        dragItem = null;
+                        const category = ul.closest('.category, .special-tasks').id;
+                        const newOrder = Array.from(ul.children).map(li => {
+                            const taskText = li.querySelector('.task-text').textContent;
+                            return tasksData[category].find(task => task.text === taskText);
+                        }).filter(Boolean);
+                        
+                        tasksData[category] = newOrder;
+                        saveData();
+                        renderTasks();
+                    });
+                    ul.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        if (dragItem && dragItem !== e.target.closest('li')) {
+                            const afterElement = getDragAfterElement(ul, e.clientY);
+                            const draggable = document.querySelector('.dragging');
+                            if (afterElement == null) {
+                                ul.appendChild(draggable);
+                            } else {
+                                ul.insertBefore(draggable, afterElement);
+                            }
+                        }
+                    });
+                });
+                
+                function getDragAfterElement(container, y) {
+                    const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+                    return draggableElements.reduce((closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+                        if (offset < 0 && offset > closest.offset) {
+                            return { offset: offset, element: child };
+                        } else {
+                            return closest;
+                        }
+                    }, { offset: -Infinity }).element;
+                }
+            }
+            
+            // Event-Listener für das Suchfeld
+            document.getElementById('search-input').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.category, .special-tasks').forEach(categoryDiv => {
+                    const tasks = categoryDiv.querySelectorAll('li');
+                    let hasVisibleTasks = false;
+                    tasks.forEach(taskLi => {
+                        const taskText = taskLi.querySelector('.task-text').textContent.toLowerCase();
+                        if (taskText.includes(searchTerm)) {
+                            taskLi.style.display = '';
+                            hasVisibleTasks = true;
+                        } else {
+                            taskLi.style.display = 'none';
+                        }
+                    });
+                    // Verstecke die ganze Kategorie, wenn keine Aufgaben sichtbar sind
+                    if (!hasVisibleTasks && searchTerm !== '') {
+                        categoryDiv.style.display = 'none';
+                    } else {
+                        categoryDiv.style.display = '';
+                    }
+                });
+            });
+
+            document.getElementById("updateBtn").addEventListener("click", function() {
+                renderTasks();
+            });
+
+            document.getElementById("printBtn").addEventListener("click", function() {
+                window.print();
+            });
+
+            document.getElementById("resetBtn").addEventListener("click", function () {
+                if (confirm("Möchtest du wirklich alle eigenen Einträge und Haken zurücksetzen?")) {
+                    localStorage.removeItem('urlaubChecklistData');
+                    tasksData = initialTasksData; // Reset to initial data
+                    renderTasks();
+                }
+            });
+
+            // Funktion zur Anzeige der Urlaubs-Warnung
+            function checkVacationWarning() {
+                const vacationWarningDiv = document.getElementById('vacation-warning');
+                const tripStartDate = document.getElementById("trip-start-date").value;
+                const tripEndDate = document.getElementById("trip-end-date").value;
+
+                if (!tripStartDate || !tripEndDate) {
+                    vacationWarningDiv.classList.remove('visible');
+                    return;
+                }
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+                const start = new Date(tripStartDate);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date(tripEndDate);
+                end.setHours(23, 59, 59, 999); // Set to end of day
+
+                if (today >= start && today <= end) {
+                    const uncheckedSpecialTasks = tasksData['sonderaufgaben-div'].filter(task => !task.checked);
+                    if (uncheckedSpecialTasks.length > 0) {
+                        const taskList = uncheckedSpecialTasks.map(task => `"${task.text}"`).join(', ');
+                        vacationWarningDiv.innerHTML = `
+                            **Hallo TME!** Denk dran, während deines Urlaubs stehen noch folgende Sonderaufgaben an:
+                            <br>
+                            ${taskList}. Viel Erfolg beim Erledigen und genieße die Zeit!
+                        `;
+                        vacationWarningDiv.classList.add('visible');
+                    } else {
+                        vacationWarningDiv.classList.remove('visible');
+                    }
+                } else {
+                    vacationWarningDiv.classList.remove('visible');
+                }
+            }
+
+            renderTasks(); // Initial render when the page loads
+        });
+    </script>
+</body>
+</html>
+
+
